@@ -17,7 +17,7 @@ Esta es una aplicación web interactiva diseñada para visualizar mecánicamente
 ## Cómo usar
 
 1. Descarga el repositorio completo.
-2. Abre `docs/index.html` en cualquier navegador web moderno (Chrome, Firefox, Safari, Edge).
+2. Abre `src/index.html` en cualquier navegador web moderno (Chrome, Firefox, Safari, Edge).
 3. Ajusta la **Base** y el **Exponente** usando los controles laterales para ver la transformación en tiempo real.
 
 ## Publicación en GitHub Pages
@@ -27,6 +27,6 @@ Para publicar este proyecto:
 2. Ve a **Settings** > **Pages** en tu repositorio.
 3. En la sección **Build and deployment**, asegúrate de que **Source** sea `Deploy from a branch`.
 4. Debajo de **Branch**, selecciona tu rama principal (normalmente `main`).
-5. En el menú desplegable de carpetas (donde dice `/ (root)`), cámbialo a **`/docs`**.
+5. En el menú desplegable de carpetas (donde dice `/ (root)`), cámbialo a **`/src`**.
 6. Haz clic en **Save**.
-7. ¡Listo! Tu visualizador estará disponible en la URL proporcionada por GitHub (ej. `https://tu-usuario.github.io/nombre-del-repo/`).
+7. ¡Listo! Tu visualizador estará disponible en la URL proporcionada por GitHub (ej. `https://USUARIO.github.io/REPOSITORIO/`).
