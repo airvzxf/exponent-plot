@@ -27,12 +27,30 @@
             <aside class="controls">
                 <div class="control-group">
                     <label for="base-input">Base (n): <span id="base-val">2</span></label>
-                    <input type="range" id="base-input" min="0" max="4" value="2" step="1">
+                    <input type="range" id="base-input" min="0" max="4" value="2" step="1" list="base-ticks">
+                    <datalist id="base-ticks">
+                        <option value="0"></option>
+                        <option value="1"></option>
+                        <option value="2"></option>
+                        <option value="3"></option>
+                        <option value="4"></option>
+                    </datalist>
                 </div>
 
                 <div class="control-group">
                     <label for="exponent-slider">Exponente (k): <span id="exponent-val">3</span></label>
-                    <input type="range" id="exponent-slider" min="-4" max="4" value="3" step="1">
+                    <input type="range" id="exponent-slider" min="-4" max="4" value="3" step="1" list="exponent-ticks">
+                    <datalist id="exponent-ticks">
+                        <option value="-4"></option>
+                        <option value="-3"></option>
+                        <option value="-2"></option>
+                        <option value="-1"></option>
+                        <option value="0"></option>
+                        <option value="1"></option>
+                        <option value="2"></option>
+                        <option value="3"></option>
+                        <option value="4"></option>
+                    </datalist>
                 </div>
 
                 <div class="info-panel">
