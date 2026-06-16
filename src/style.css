@@ -32,7 +32,8 @@ body {
 .container {
     width: 100%;
     max-width: 1200px;
-    height: 85vh; /* Altura fija relativa para estabilidad */
+    /* Altura fija relativa para estabilidad */
+    height: 85vh;
     max-height: 800px;
     background-color: var(--card-bg);
     border-radius: var(--border-radius);
@@ -98,6 +99,7 @@ header h1 {
     font-weight: 700;
     margin-bottom: 0.5rem;
     background: linear-gradient(to right, #38bdf8, #818cf8);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -146,8 +148,30 @@ main {
 }
 
 @media (max-width: 900px) {
+    body {
+        align-items: flex-start;
+        padding: 10px;
+    }
+
+    .container {
+        height: auto;
+        max-height: none;
+        overflow-y: auto;
+    }
+
     main {
         flex-direction: column;
+    }
+
+    .canvas-container {
+        flex: none;
+        height: 350px;
+        min-height: 350px;
+    }
+
+    .controls {
+        flex: none;
+        overflow-y: visible;
     }
 }
 
@@ -179,7 +203,8 @@ canvas {
     padding: 1.5rem;
     border-radius: var(--border-radius);
     border: 1px solid #334155;
-    overflow-y: auto; /* Permitir scroll si los controles son muchos */
+    /* Permitir scroll si los controles son muchos */
+    overflow-y: auto;
 }
 
 .control-group {
