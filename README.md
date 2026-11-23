@@ -33,7 +33,9 @@ exponent-plot/
 ├── .stylelintrc.json
 ├── .htmlvalidate.json
 ├── lighthouserc.json
-└── .github/workflows/ci.yml # actionlint, lint, pruebas, e2e y Lighthouse
+└── .github/workflows/
+    ├── ci.yml               # actionlint, lint, pruebas, e2e y Lighthouse
+    └── release.yml          # release desde una etiqueta firmada
 ```
 
 ## Cómo usar
@@ -66,7 +68,22 @@ El dominio sirve CSS y JS con caché de navegador de un año (el HTML no se guar
 
 ## Despliegue
 
-El sitio se publica con Cloudflare Pages, conectado al repositorio de GitHub: cada commit en `main` despliega la carpeta `src/` en producción. No hay paso de compilación: se publican los archivos tal cual.
+El sitio se publica con Cloudflare Pages, conectado al repositorio de GitHub: cada commit en `main` despliega la carpeta `src/` en producción, y cada PR tiene su vista previa en `*.exponent-plot.pages.dev`. No hay paso de compilación: se publican los archivos tal cual.
+
+## Versiones
+
+Las versiones siguen [SemVer](https://semver.org/lang/es/) y se anotan en [CHANGELOG.md](CHANGELOG.md).
+
+1. En un PR de release: sube `version` en `package.json` (y `package-lock.json` con `npm install --package-lock-only`), cambia los `?v=` de `src/index.html` a la misma versión y convierte `## [Unreleased]` en `## [X.Y.Z] - AAAA-MM-DD`.
+2. Tras el merge, firma la etiqueta sobre el commit de `main` y súbela:
+
+   ```bash
+   git switch main && git pull --ff-only
+   git tag -s vX.Y.Z -m "release: X.Y.Z"
+   git push origin vX.Y.Z
+   ```
+
+El workflow `release.yml` comprueba que la etiqueta esté firmada por una clave de `.github/trusted-signers`, que apunte a un commit de `main` y que la versión y el CHANGELOG coincidan; después vuelve a pasar lint y pruebas, publica el sitio como `exponent-plot-X.Y.Z.tar.gz` con su procedencia (`gh attestation verify`) y verifica que producción sirva exactamente esos archivos.
 
 ## Licencia
 
