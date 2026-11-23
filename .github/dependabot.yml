@@ -1,3 +1,23 @@
+# Dependabot config for exponent-plot.
+#
+# Two ecosystems, checked weekly:
+# * github-actions: the actions in .github/workflows/*.yml. They are
+#   pinned to a commit SHA with a `# vX.Y.Z` comment; Dependabot updates
+#   both. `actions/*` and third-party actions go in separate PRs.
+# * npm: development tools only (ESLint, Stylelint, html-validate and
+#   puppeteer-core for the e2e test). The published site in src/ has no
+#   npm dependencies, so these PRs never change what production serves
+#   and need no release.
+#
+# Not covered here, bumped by hand:
+# * actionlint: the `ver=` and `sha=` lines in .github/workflows/ci.yml.
+# * @lhci/cli: the pinned version in the Lighthouse job of ci.yml.
+# * Node.js: `node-version` in ci.yml and release.yml.
+#
+# Every PR runs the full CI. Merge it once CI is green; for a major
+# version, also check that the tool still applies its rules (for a
+# linter, a deliberate error must still fail).
+
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -14,8 +34,6 @@ updates:
       prefix: "ci"
     labels: ["dependencies", "ci"]
 
-  # Development tools only (linters and the e2e driver): the published
-  # site in src/ has no npm dependencies.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
