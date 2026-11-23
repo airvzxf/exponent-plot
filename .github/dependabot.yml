@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns: ["actions/*"]
+      third-party:
+        patterns: ["*"]
+        exclude-patterns: ["actions/*"]
+    commit-message:
+      prefix: "ci"
+    labels: ["dependencies", "ci"]
+
+  # Development tools only (linters and the e2e driver): the published
+  # site in src/ has no npm dependencies.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      dev-tools:
+        patterns: ["*"]
+    commit-message:
+      prefix: "chore(deps)"
+    labels: ["dependencies"]

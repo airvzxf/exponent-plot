@@ -20,6 +20,15 @@ export default [
         },
     },
     {
+        files: ['test/**/*.mjs', '*.mjs'],
+        languageOptions: {
+            ecmaVersion: 2022,
+            sourceType: 'module',
+            // Node y, dentro de page.evaluate(), el navegador.
+            globals: { ...globals.node, ...globals.browser },
+        },
+    },
+    {
         rules: {
             'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
             eqeqeq: 'error',

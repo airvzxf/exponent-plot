@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const M = require('../src/exponent-math.js');
+const M = require('../../src/exponent-math.js');
 
 test('describe: expansión con base >= 2', () => {
     const info = M.describe(2, 3);
