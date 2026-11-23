@@ -13,8 +13,8 @@
     "lint:js": "eslint .",
     "lint:css": "stylelint \"src/**/*.css\"",
     "lint:html": "html-validate src/index.html",
-    "test": "node --test test/unit/",
-    "test:e2e": "node --test test/e2e/"
+    "test": "node --test \"test/unit/**/*.test.js\"",
+    "test:e2e": "node --test \"test/e2e/**/*.test.mjs\""
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
