@@ -361,7 +361,10 @@ jobs:
       - name: Run the e2e smoke test
         env:
           CHROME_PATH: /usr/bin/google-chrome
-        run: npm run test:e2e
+        run: |
+          set -eu
+          "${CHROME_PATH}" --version
+          npm run test:e2e
 
       # Reproducible archive: sorted names, fixed owner and the commit
       # time as mtime, so the same commit always gives the same bytes.

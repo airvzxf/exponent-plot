@@ -18,13 +18,32 @@ const CANDIDATES = [
 ].filter(Boolean);
 const executablePath = CANDIDATES.find((p) => existsSync(p));
 
+/**
+ * Chrome a veces no arranca a tiempo en los runners de GitHub (se vio una
+ * vez en el release v1.0.0). Se reintenta una vez mostrando su salida para
+ * que, si vuelve a fallar, el log diga por qué.
+ */
+async function launchChrome() {
+    const options = {
+        executablePath,
+        args: ['--no-sandbox', '--disable-dev-shm-usage'],
+        timeout: 60_000,
+    };
+    try {
+        return await puppeteer.launch(options);
+    } catch (err) {
+        console.error(`Chrome no arrancó (${err.message}); reintentando con su salida visible.`);
+        return puppeteer.launch({ ...options, dumpio: true });
+    }
+}
+
 let browser;
 let page;
 const errors = [];
 
 before(async () => {
     assert.ok(executablePath, `no se encontró Chrome; define CHROME_PATH (probé: ${CANDIDATES.join(', ')})`);
-    browser = await puppeteer.launch({ executablePath, args: ['--no-sandbox'] });
+    browser = await launchChrome();
     page = await browser.newPage();
     page.on('pageerror', (err) => errors.push(err.message));
     page.on('console', (msg) => {
