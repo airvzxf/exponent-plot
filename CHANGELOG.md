@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-23
+
 ### Added
 
 - **Each power is built as n copies of the previous one.** n^k is drawn as n copies of the n^(k-1) block, alternating horizontal and vertical steps, with one color and a nested frame per step, so an even k gives a square of squares.
@@ -28,3 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Accessibility: results announced with `aria-live`, a canvas label, labelled buttons and underlined footer links. Lighthouse scores 100 in every category.
 - The project name is the same everywhere: "Visualizador de Exponentes: Positivos y Negativos".
+
+[Unreleased]: https://github.com/airvzxf/exponent-plot/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/airvzxf/exponent-plot/releases/tag/v1.0.0

@@ -58,7 +58,8 @@ env:
   # awk program that prints the CHANGELOG.md section for version `v`
   # (`awk -v v=X.Y.Z`). Defined once so the reachability check and the
   # build job's extraction cannot disagree. It skips `## [Unreleased]`
-  # and stops at the next `## [...]` heading or the compare-link footer.
+  # and stops at the next `## [...]` heading or the link footer
+  # (`[Unreleased]: ...` or `[X.Y.Z]: ...`).
   CHANGELOG_SECTION_AWK: |
     BEGIN {
         in_section = 0
@@ -66,7 +67,7 @@ env:
         gsub(/\./, "\\.", v_escaped)
         heading_re = "^## \\[" v_escaped "\\]( -.*)?$"
         next_heading_re = "^## \\["
-        compare_re = "^\\[[0-9]+\\.[0-9]+\\.[0-9]+\\]:"
+        compare_re = "^\\[([0-9]+\\.[0-9]+\\.[0-9]+[^]]*|Unreleased)\\]:"
     }
     $0 ~ heading_re { in_section = 1; next }
     in_section && $0 ~ next_heading_re { exit }
