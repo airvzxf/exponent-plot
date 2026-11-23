@@ -3,31 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador de Exponentes - Positivos y Negativos</title>
+    <meta name="description" content="Visualizador interactivo de exponentes: cada potencia es la repetición del bloque anterior n veces, y los exponentes negativos parten la unidad.">
+    <title>Visualizador de Exponentes: Positivos y Negativos</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container" id="main-container">
-        <button id="fullscreen-btn" title="Pantalla Completa">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+        <button id="fullscreen-btn" type="button" title="Pantalla completa" aria-label="Pantalla completa" aria-pressed="false">
+            <svg class="icon-enter" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+            <svg class="icon-exit" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path></svg>
         </button>
         <header>
             <h1>Visualizador de Exponentes: Positivos y Negativos</h1>
-            <p>La potencia como expansión y compresión geométrica</p>
+            <p>Cada potencia repite n veces a la anterior; los exponentes negativos parten la unidad</p>
             <div class="equation-container">
-                <span id="math-display">5<sup>3</sup> = 125</span>
+                <span id="math-display" aria-live="polite">2<sup>3</sup> = 8</span>
             </div>
         </header>
 
         <main>
             <div class="canvas-container">
-                <canvas id="exponentCanvas"></canvas>
+                <canvas id="exponent-canvas" role="img" aria-label="2 elevado a 3 es igual a 8: 8 unidades de valor 1.">
+                    Visualización de 2<sup>3</sup> = 8: ocho unidades de valor 1.
+                </canvas>
             </div>
 
             <aside class="controls">
                 <div class="control-group">
-                    <label for="base-input">Base (n): <span id="base-val">2</span></label>
-                    <input type="range" id="base-input" min="0" max="4" value="2" step="1" list="base-ticks">
+                    <label for="base-slider">Base (n): <span id="base-value">2</span></label>
+                    <input type="range" id="base-slider" min="0" max="4" value="2" step="1" list="base-ticks">
                     <datalist id="base-ticks">
                         <option value="0"></option>
                         <option value="1"></option>
@@ -38,7 +42,7 @@
                 </div>
 
                 <div class="control-group">
-                    <label for="exponent-slider">Exponente (k): <span id="exponent-val">3</span></label>
+                    <label for="exponent-slider">Exponente (k): <span id="exponent-value">3</span></label>
                     <input type="range" id="exponent-slider" min="-4" max="4" value="3" step="1" list="exponent-ticks">
                     <datalist id="exponent-ticks">
                         <option value="-4"></option>
@@ -53,18 +57,20 @@
                     </datalist>
                 </div>
 
-                <div class="info-panel">
+                <div class="info-panel" aria-live="polite">
                     <div id="formula-explanation">
-                        <strong>Fórmula:</strong> <span id="formula-text">5 * 5 * 5</span>
+                        <strong>Fórmula:</strong> <span id="formula-text">2 × 2 × 2</span>
                     </div>
                     <div id="result-explanation">
-                        La unidad se ha expandido 125 veces.
+                        La unidad se expande: 2³ son 2 copias de 2². Tienes 8 unidades de valor 1.
                     </div>
                 </div>
 
                 <div class="cancellation-note">
                     <strong>Principio de Cancelación:</strong>
-                    <p>Si multiplicas la expansión (n<sup>k</sup>) por la compresión (n<sup>-k</sup>), regresas exactamente a la unidad base (1).</p>
+                    <p>Si multiplicas la expansión (n<sup>k</sup>) por la compresión (n<sup>−k</sup>), regresas exactamente a la unidad base (1).</p>
+                    <button id="cancellation-btn" type="button" aria-describedby="cancellation-hint">Ver cancelación</button>
+                    <p id="cancellation-hint" class="hint">Anima 2³ · 2⁻³ = 2⁰ = 1.</p>
                 </div>
             </aside>
         </main>
@@ -72,9 +78,10 @@
         <footer>
             <p>Visualizador de Exponentes: Positivos y Negativos | &copy; 2026</p>
             <p>Distribuido bajo licencia <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer">GNU AGPLv3</a></p>
-            <p><a href="https://github.com/airvzxf/graphical-representation-of-the-exponent" id="repo-link" target="_blank" rel="noopener noreferrer">Ver Código Fuente</a></p>
+            <p><a href="https://github.com/airvzxf/exponent-plot" id="repo-link" target="_blank" rel="noopener noreferrer">Ver Código Fuente</a></p>
         </footer>
     </div>
+    <script src="exponent-math.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
