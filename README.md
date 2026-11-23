@@ -26,10 +26,14 @@ exponent-plot/
 │   ├── style.css
 │   ├── exponent-math.js     # Lógica pura (sin DOM)
 │   └── script.js            # Dibujo, animaciones e interfaz
-├── test/                    # Pruebas con node:test
+├── test/
+│   ├── unit/                # Lógica y versión de los recursos (node:test)
+│   └── e2e/                 # Prueba de humo en Chrome sin interfaz
 ├── eslint.config.mjs
 ├── .stylelintrc.json
-└── .github/workflows/ci.yml # Lint y pruebas en cada push y PR
+├── .htmlvalidate.json
+├── lighthouserc.json
+└── .github/workflows/ci.yml # actionlint, lint, pruebas, e2e y Lighthouse
 ```
 
 ## Cómo usar
@@ -47,10 +51,18 @@ Ajusta la **base** y el **exponente** con los controles laterales.
 Requiere Node.js 22 o superior.
 
 ```bash
-npm install     # herramientas de desarrollo (ESLint, Stylelint)
-npm run lint    # revisa JavaScript y CSS
-npm test        # pruebas de la lógica en test/
+npm install                   # herramientas de desarrollo
+npm run lint                  # ESLint, Stylelint y html-validate
+npm test                      # pruebas unitarias (test/unit/)
+npm run test:e2e              # prueba de humo en Chrome (test/e2e/)
+npx @lhci/cli@0.16.0 autorun  # Lighthouse, como en CI
 ```
+
+La prueba e2e busca Chrome o Chromium en las rutas habituales; si está en otro lugar, usa `CHROME_PATH=/ruta/al/navegador npm run test:e2e`.
+
+### Versión de los recursos
+
+El dominio sirve CSS y JS con caché de navegador de un año (el HTML no se guarda). Por eso `index.html` carga cada recurso con `?v=<versión>`, y una prueba unitaria exige que coincida con `version` de `package.json`. Al cambiar la versión, actualiza ambos.
 
 ## Despliegue
 

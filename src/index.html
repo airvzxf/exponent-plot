@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Visualizador interactivo de exponentes: cada potencia es la repetición del bloque anterior n veces, y los exponentes negativos parten la unidad.">
     <title>Visualizador de Exponentes: Positivos y Negativos</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- ?v= debe coincidir con "version" de package.json (lo comprueba test/unit/assets.test.js):
+         el dominio guarda CSS y JS en caché del navegador por un año. -->
+    <link rel="stylesheet" href="style.css?v=0.0.0">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
     <div class="container" id="main-container">
@@ -81,7 +84,7 @@
             <p><a href="https://github.com/airvzxf/exponent-plot" id="repo-link" target="_blank" rel="noopener noreferrer">Ver Código Fuente</a></p>
         </footer>
     </div>
-    <script src="exponent-math.js"></script>
-    <script src="script.js"></script>
+    <script src="exponent-math.js?v=0.0.0"></script>
+    <script src="script.js?v=0.0.0"></script>
 </body>
 </html>
