@@ -1,21 +1,73 @@
-# Visualizador de Exponentes: Expansión y Compresión
+# Visualizador de Exponentes: Positivos y Negativos
 
-Esta es una aplicación web interactiva diseñada para visualizar mecánicamente el concepto de la potencia (exponentes positivos y negativos) mediante una metáfora geométrica de **escalado**.
+Aplicación web interactiva que muestra la potencia como **expansión y compresión** geométrica: cada potencia es la repetición del bloque anterior `n` veces, y los exponentes negativos parten la unidad en piezas cada vez más pequeñas.
+
+**Demo:** [exponent-plot.rovisoft.net](https://exponent-plot.rovisoft.net/)
 
 ## Características
 
-- **Exponentes Positivos ($n^k$):** Representan una **herramienta de expansión**. Una unidad pequeña se clona y expande masivamente hasta ser $n^k$ veces más grande.
-- **Exponentes Negativos ($n^{-k}$):** Representan una **herramienta de compresión o partición**. Una unidad grande se fracciona en $n$ partes repetidamente, resultando en un fragmento microscópico.
-- **Principio de Cancelación:** Visualiza cómo la multiplicación de un exponente positivo por su inverso negativo colapsa el objeto exactamente de regreso a su estado base original (el 1).
+- **Exponentes positivos ($n^k$): expansión.** $n^k$ se construye como $n$ copias de $n^{k-1}$, alternando la dirección en cada paso (horizontal, vertical, horizontal…). Cada paso tiene su color y un marco que agrupa el bloque anterior, así que con $k$ par se ve un cuadrado de cuadrados.
+- **Exponentes negativos ($n^{-k}$): compresión.** La unidad se parte en $n$ partes, $k$ veces. La unidad queda fija y se resalta una sola pieza de valor $1/n^k$; el valor se muestra como fracción y decimal (`1/256 ≈ 0.0039`).
+- **Principio de cancelación.** El botón *Ver cancelación* anima $n^k \cdot n^{-k} = n^0 = 1$: las $n^k$ unidades se comprimen a $1/n^k$ de su tamaño y juntas ocupan exactamente una unidad original.
+- **Casos especiales explicados:** $0^k = 0$, $0^{-k}$ indefinido (división entre cero), $0^0 = 1$ por convención y $1^k = 1$.
 
 ## Tecnologías
 
-- **HTML5 Canvas:** Para el renderizado eficiente de bloques y animaciones fluidas.
-- **CSS Moderno:** Diseño responsivo y estético con variables CSS.
-- **JavaScript (Vanilla):** Lógica matemática y control de animación sin dependencias externas.
+- **HTML5 Canvas** para el dibujo y las animaciones. El lienzo solo se vuelve a dibujar mientras algo se mueve.
+- **CSS** con variables, diseño responsivo y soporte para `prefers-reduced-motion`.
+- **JavaScript sin dependencias** en el navegador. La lógica pura (textos, formato y geometría) vive en `src/exponent-math.js` y se prueba con Node.
+
+## Estructura
+
+```
+exponent-plot/
+├── src/                     # Sitio publicado
+│   ├── index.html
+│   ├── style.css
+│   ├── exponent-math.js     # Lógica pura (sin DOM)
+│   └── script.js            # Dibujo, animaciones e interfaz
+├── test/
+│   ├── unit/                # Lógica y versión de los recursos (node:test)
+│   └── e2e/                 # Prueba de humo en Chrome sin interfaz
+├── eslint.config.mjs
+├── .stylelintrc.json
+├── .htmlvalidate.json
+├── lighthouserc.json
+└── .github/workflows/ci.yml # actionlint, lint, pruebas, e2e y Lighthouse
+```
 
 ## Cómo usar
 
-1. Descarga el repositorio completo.
-2. Abre `src/index.html` en cualquier navegador web moderno (Chrome, Firefox, Safari, Edge).
-3. Ajusta la **Base** y el **Exponente** usando los controles laterales para ver la transformación en tiempo real.
+Abre `src/index.html` en un navegador moderno, o sirve la carpeta:
+
+```bash
+npx serve src
+```
+
+Ajusta la **base** y el **exponente** con los controles laterales.
+
+## Desarrollo
+
+Requiere Node.js 22 o superior.
+
+```bash
+npm install                   # herramientas de desarrollo
+npm run lint                  # ESLint, Stylelint y html-validate
+npm test                      # pruebas unitarias (test/unit/)
+npm run test:e2e              # prueba de humo en Chrome (test/e2e/)
+npx @lhci/cli@0.16.0 autorun  # Lighthouse, como en CI
+```
+
+La prueba e2e busca Chrome o Chromium en las rutas habituales; si está en otro lugar, usa `CHROME_PATH=/ruta/al/navegador npm run test:e2e`.
+
+### Versión de los recursos
+
+El dominio sirve CSS y JS con caché de navegador de un año (el HTML no se guarda). Por eso `index.html` carga cada recurso con `?v=<versión>`, y una prueba unitaria exige que coincida con `version` de `package.json`. Al cambiar la versión, actualiza ambos.
+
+## Despliegue
+
+El sitio se publica con Cloudflare Pages, conectado al repositorio de GitHub: cada commit en `main` despliega la carpeta `src/` en producción. No hay paso de compilación: se publican los archivos tal cual.
+
+## Licencia
+
+[GNU AGPLv3](LICENSE).
