@@ -5,10 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Visualizador interactivo de exponentes: cada potencia es la repetición del bloque anterior n veces, y los exponentes negativos parten la unidad.">
     <title>Visualizador de Exponentes: Positivos y Negativos</title>
+    <link rel="canonical" href="https://exponent-plot.rovisoft.net/">
+    <meta name="theme-color" content="#0f172a">
+
+    <!-- Vista previa al compartir el enlace -->
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_MX">
+    <meta property="og:site_name" content="Visualizador de Exponentes">
+    <meta property="og:title" content="Visualizador de Exponentes: Positivos y Negativos">
+    <meta property="og:description" content="Cada potencia es n copias de la anterior; los exponentes negativos parten la unidad. Interactivo, con la animación nᵏ · n⁻ᵏ = 1.">
+    <meta property="og:url" content="https://exponent-plot.rovisoft.net/">
+    <meta property="og:image" content="https://exponent-plot.rovisoft.net/og-image.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="2⁴ = 16 dibujado como 2 copias de 2³, con un color por paso">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Visualizador de Exponentes: Positivos y Negativos">
+    <meta name="twitter:description" content="Cada potencia es n copias de la anterior; los exponentes negativos parten la unidad.">
+    <meta name="twitter:image" content="https://exponent-plot.rovisoft.net/og-image.png">
+
     <!-- ?v= debe coincidir con "version" de package.json (lo comprueba test/unit/assets.test.js):
          el dominio guarda CSS y JS en caché del navegador por un año. -->
     <link rel="stylesheet" href="style.css?v=1.0.0">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
 <body>
     <div class="container" id="main-container">
@@ -19,16 +40,21 @@
         <header>
             <h1>Visualizador de Exponentes: Positivos y Negativos</h1>
             <p>Cada potencia repite n veces a la anterior; los exponentes negativos parten la unidad</p>
-            <div class="equation-container">
-                <span id="math-display" aria-live="polite">2<sup>3</sup> = 8</span>
+            <div class="equation-row">
+                <div class="equation-container">
+                    <span id="math-display" aria-live="polite">2<sup>3</sup> = 8</span>
+                </div>
+                <a id="dimensions-link" class="related-link" href="https://exponent-dimensions.rovisoft.net/#b=2&amp;e=3" aria-describedby="dimensions-note">Ver 2³ en 1D, 2D y 3D →</a>
+                <span id="dimensions-note" class="visually-hidden">La misma potencia como línea, cuadrado o cubo en el visualizador de dimensiones.</span>
             </div>
         </header>
 
         <main>
             <div class="canvas-container">
-                <canvas id="exponent-canvas" role="img" aria-label="2 elevado a 3 es igual a 8: 8 unidades de valor 1.">
+                <canvas id="exponent-canvas" role="img" tabindex="0" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown C" aria-describedby="keyboard-hint" aria-label="2 elevado a 3 es igual a 8: 8 unidades de valor 1.">
                     Visualización de 2<sup>3</sup> = 8: ocho unidades de valor 1.
                 </canvas>
+                <p id="keyboard-hint" class="keyboard-hint"><kbd>←</kbd> <kbd>→</kbd> exponente · <kbd>↑</kbd> <kbd>↓</kbd> base · <kbd>C</kbd> cancelación</p>
             </div>
 
             <aside class="controls">
@@ -75,6 +101,7 @@
                     <button id="cancellation-btn" type="button" aria-describedby="cancellation-hint">Ver cancelación</button>
                     <p id="cancellation-hint" class="hint">Anima 2³ · 2⁻³ = 2⁰ = 1.</p>
                 </div>
+
             </aside>
         </main>
 

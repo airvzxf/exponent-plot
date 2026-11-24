@@ -142,6 +142,52 @@ test('el lienzo sigue el tamaño de su contenedor', async () => {
     }
 });
 
+test('el estado se lee de la URL y el enlace a dimensiones lo sigue', async () => {
+    await page.setViewport({ width: 1280, height: 900 });
+    await page.goto(`${PAGE_URL}#b=3&e=-2&lang=en`);
+    await settle();
+    assert.equal(await text('math-display'), '3−2 = 1/9 ≈ 0.1111');
+    const link = () => page.$eval('#dimensions-link', (a) => ({ href: a.href, text: a.textContent }));
+    assert.deepEqual(await link(), {
+        href: 'https://exponent-dimensions.rovisoft.net/#b=3&e=2&lang=en',
+        text: 'Ver 3² en 1D, 2D y 3D →',
+    });
+    assert.match(await text('dimensions-note'), /no hay exponentes negativos/);
+
+    // Mover un control actualiza la URL (conservando lang) y el enlace.
+    await setControls(2, 3);
+    assert.equal(await page.evaluate(() => location.hash), '#b=2&e=3&lang=en');
+    assert.equal((await link()).href, 'https://exponent-dimensions.rovisoft.net/#b=2&e=3&lang=en');
+    assert.doesNotMatch(await text('dimensions-note'), /Se muestra/);
+
+    // Editar el hash a mano también cambia el dibujo; fuera de rango se ajusta.
+    await page.evaluate(() => {
+        location.hash = '#b=9&e=1';
+    });
+    await page.waitForFunction(() => document.getElementById('base-value').textContent === '4');
+    assert.equal(await text('math-display'), '41 = 4');
+});
+
+test('teclado sobre el dibujo', async () => {
+    await setControls(2, 3);
+    await page.focus('#exponent-canvas');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowUp');
+    await settle();
+    assert.equal(await text('math-display'), '34 = 81');
+    // En el límite no se sale del rango.
+    await page.keyboard.press('ArrowRight');
+    await settle();
+    assert.equal(await text('exponent-value'), '4');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowLeft');
+    await settle();
+    assert.equal(await text('math-display'), '23 = 8');
+    await page.keyboard.press('c');
+    await settle();
+    assert.equal(await text('math-display'), '23 · 2−3 = 20 = 1');
+});
+
 test('sin errores de JavaScript', () => {
     assert.deepEqual(errors, []);
 });
