@@ -90,8 +90,11 @@
         }
         cancelButton.disabled = reason !== '';
         cancelButton.textContent = 'Ver cancelación';
-        cancelHint.textContent = reason || `Anima ${base}${M.toSuperscript(Math.abs(exponent))} · `
-            + `${base}${M.toSuperscript(-Math.abs(exponent))} = ${base}⁰ = 1.`;
+        const steps = Math.abs(exponent);
+        const times = `${steps} ${steps === 1 ? 'vez' : 'veces'}`;
+        cancelHint.textContent = reason || (exponent > 0
+            ? `Paso a paso: ${base}${M.toSuperscript(steps)} · ${base}${M.toSuperscript(-steps)} = 1, dividiendo entre ${base}, ${times}.`
+            : `Paso a paso: ${base}${M.toSuperscript(-steps)} · ${base}${M.toSuperscript(steps)} = 1, repitiendo la pieza ${base} veces, ${times}.`);
     }
 
     // --------------------------------------------------------------- Escena
@@ -111,10 +114,6 @@
         }
         // 'expansion', 'unit' y 'one': con base 1 solo hay una unidad.
         return { mode: 'expansion', base, layout: M.expansionLayout(base, base === 1 ? 0 : steps) };
-    }
-
-    function unitZoom() {
-        return Math.min(MAX_UNIT_PX, M.fitZoom(1, 1, view.width, view.height));
     }
 
     function zoomFor(currentScene) {
@@ -191,50 +190,159 @@
 
     // ----------------------------------------------------------- Cancelación
 
-    // hold: se ven las n^k unidades; morph: cada una se comprime a 1/n^k sin
-    // mover la cámara, para ver que juntas ocupan una sola unidad original;
-    // zoom: la cámara se acerca a esa unidad; merge: las partes se funden en 1.
-    const PHASES = { hold: 900, morph: 2400, zoom: 1000, merge: 900 };
-    const TOTAL = PHASES.hold + PHASES.morph + PHASES.zoom + PHASES.merge;
+    // La cancelación se cuenta paso a paso, con la misma regla que construye
+    // las potencias:
+    // - Desde n^k (k > 0), "plegar": multiplicar por n^-1 deshace una
+    //   repetición. Las n copias del bloque anterior se comprimen a 1/n y
+    //   caben en el lugar de una sola. Tras k pliegues, n^k piezas de 1/n^k
+    //   ocupan una unidad.
+    // - Desde n^-k (k < 0), "construir": se parte de la pieza de 1/n^k y
+    //   multiplicar por n la repite n veces. Tras k repeticiones, las piezas
+    //   llenan la unidad.
+    // Cada paso se mueve y luego se detiene con su ecuación y su
+    // explicación; al final las piezas se funden en un 1. La cámara sigue la
+    // huella de cada paso con el mismo tope que la vista normal: en potencias
+    // pequeñas casi no se mueve (se ve el encogimiento) y en las grandes se
+    // acerca para que las piezas sigan legibles.
+    const TIMING = { start: 1600, move: 1100, hold: 1500, merge: 1100 };
+
+    const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const clamp01 = (t) => Math.min(1, Math.max(0, t));
+    const pow = (base, exponent) => `${base}${M.toSuperscript(exponent)}`;
+    const fraction = (denominator) => (denominator === 1 ? '1' : `1/${denominator}`);
+
+    /** Celdas y marcos de un layout con el origen en su centro. */
+    function centeredLayout(layout) {
+        const dx = layout.width / 2;
+        const dy = layout.height / 2;
+        return {
+            cells: layout.cells.map((c) => ({ ...c, x: c.x - dx, y: c.y - dy })),
+            frames: layout.frames.map((f) => ({ ...f, x: f.x - dx, y: f.y - dy })),
+            unit: { x: -dx, y: -dy, w: 1, h: 1 },
+        };
+    }
+
+    /** Plegar: de n^k a 1 dividiendo entre n, k veces. */
+    function foldKeyframes(base, exponent) {
+        const steps = base === 1 ? 0 : exponent;
+        const count = M.intPow(base, steps);
+        const keyframes = [];
+        for (let j = 0; j <= steps; j++) {
+            const folded = M.foldLayout(base, steps, j);
+            const layout = centeredLayout(folded);
+            const pieceValue = M.intPow(base, j);
+            const remaining = M.intPow(base, steps - j);
+            let equation;
+            let text;
+            if (j === 0) {
+                equation = [String(base), { sup: exponent }, ` = ${count}`];
+                text = count === 1
+                    ? `Empiezas con ${pow(base, exponent)} = 1: una sola unidad. Multiplicar por ${pow(base, -exponent)} = 1 no la cambia.`
+                    : `Empiezas con ${pow(base, exponent)}: ${count} unidades de valor 1. Multiplicar por ${pow(base, -exponent)} `
+                        + `es dividir entre ${base}, ${exponent} ${exponent === 1 ? 'vez' : 'veces'}: cada división deshace una repetición.`;
+            } else {
+                equation = [String(base), { sup: exponent }, ' · ', String(base), { sup: -j }, ' = ', String(base), { sup: exponent - j }];
+                if (j === steps) {
+                    equation.push(' = 1');
+                }
+                text = `× ${pow(base, -1)} (${j} de ${steps}): las ${base} copias de ${pow(base, steps - j)} se comprimen a 1/${base} `
+                    + `y caben en el lugar de una sola. Quedan ${count} piezas de ${fraction(pieceValue)}`
+                    + (j === steps ? ': ocupan exactamente una unidad.' : ` = ${remaining}.`);
+            }
+            keyframes.push({
+                cells: layout.cells.map((c) => ({ ...c, alpha: 1 })),
+                frames: layout.frames.map((f) => ({ ...f, alpha: f.folded ? 0.25 : 1 })),
+                unit: layout.unit,
+                // Función y no valor: se recalcula si el lienzo cambia de tamaño.
+                zoom: () => Math.min(MAX_UNIT_PX, M.fitZoom(folded.width, folded.height, view.width, view.height)),
+                label: (i) => (j === 0 ? String(i + 1) : fraction(pieceValue)),
+                equation,
+                formula: j === 0 ? `${count} × 1` : `${count} × ${fraction(pieceValue)} = ${remaining}`,
+                text,
+            });
+        }
+        return keyframes;
+    }
+
+    /** Construir: de la pieza 1/n^k a la unidad repitiendo n veces, k veces. */
+    function buildKeyframes(base, exponent) {
+        const total = Math.abs(exponent);
+        const steps = base === 1 ? 0 : total;
+        const count = M.intPow(base, steps);
+        const layout = centeredLayout(M.foldLayout(base, steps, steps));
+        const keyframes = [];
+        for (let j = 0; j <= steps; j++) {
+            const visible = M.intPow(base, j);
+            const value = M.intPow(base, steps - j);
+            let equation;
+            let text;
+            if (j === 0) {
+                equation = [String(base), { sup: exponent }, ` = ${fraction(count)}`];
+                text = count === 1
+                    ? `Empiezas con ${pow(base, exponent)} = 1: la unidad entera. Multiplicar por ${pow(base, total)} = 1 no la cambia.`
+                    : `Empiezas con ${pow(base, exponent)}: una pieza de ${fraction(count)}. Multiplicar por ${pow(base, total)} `
+                        + `es repetirla ${base} veces, ${total} ${total === 1 ? 'vez' : 'veces'}: la misma regla que construye las potencias.`;
+            } else {
+                equation = [String(base), { sup: exponent }, ' · ', String(base), { sup: j }, ' = ', String(base), { sup: j - steps }];
+                equation.push(` = ${fraction(value)}`);
+                text = `× ${base} (${j} de ${steps}): lo que hay se repite ${base} veces. Ahora son ${visible} piezas de ${fraction(count)}`
+                    + (j === steps ? ': llenan la unidad.' : ` = ${fraction(value)}.`);
+            }
+            keyframes.push({
+                // Una copia que todavía no existe espera, invisible, sobre la
+                // pieza de la que saldrá.
+                cells: layout.cells.map((c, i) => (i < visible
+                    ? { ...c, alpha: 1 }
+                    : { ...layout.cells[i % visible], index: c.index, group: c.group, alpha: 0 })),
+                frames: layout.frames.map((f, i) => {
+                    const first = (i - layout.frames.findIndex((g) => g.level === f.level)) * M.intPow(base, f.level);
+                    return { ...f, alpha: f.level <= j && first < visible ? 0.6 : 0 };
+                }),
+                unit: layout.unit,
+                zoom: () => M.fitZoom(1, 1, view.width, view.height),
+                label: () => fraction(count),
+                highlightFirst: true,
+                equation,
+                formula: `${visible} × ${fraction(count)} = ${fraction(value)}`,
+                text,
+            });
+        }
+        return keyframes;
+    }
 
     function startCancellation() {
         const { base, exponent } = readControls();
-        const steps = Math.abs(exponent);
-        const count = M.intPow(base, steps);
-        const from = M.expansionLayout(base, base === 1 ? 0 : steps);
-        const to = M.partitionLayout(base, base === 1 ? 0 : steps, 1);
-        const reciprocal = M.formatReciprocal(count);
+        const building = exponent < 0;
+        const keyframes = building ? buildKeyframes(base, exponent) : foldKeyframes(base, exponent);
+        const last = keyframes.length - 1;
 
+        const segments = [{ kind: 'hold', to: 0, duration: TIMING.start }];
+        for (let j = 1; j <= last; j++) {
+            segments.push({ kind: 'move', from: j - 1, to: j, duration: TIMING.move });
+            segments.push({ kind: 'hold', to: j, duration: TIMING.hold });
+        }
+        segments.push({ kind: 'merge', to: last, duration: TIMING.merge });
+        const total = segments.reduce((sum, seg) => sum + seg.duration, 0);
+
+        const steps = Math.abs(exponent);
+        const opening = building ? [base, -steps] : [base, steps];
+        const closing = building ? [base, steps] : [base, -steps];
         cancellation = {
             base,
-            count,
-            from,
-            to,
-            zoomFrom: Math.min(MAX_UNIT_PX, M.fitZoom(from.width, from.height, view.width, view.height)),
-            start: performance.now() - (reducedMotion.matches ? TOTAL : 0),
-            phase: null,
-            texts: count === 1
-                ? {
-                    hold: `Empiezas con ${base}${M.toSuperscript(steps)} = 1: una sola unidad.`,
-                    morph: `Multiplicar por ${base}${M.toSuperscript(-steps)} = 1 no cambia su tamaño.`,
-                    merge: 'La unidad sigue igual: regresas a 1.',
-                }
-                : {
-                    hold: `Empiezas con ${base}${M.toSuperscript(steps)}: ${count} unidades de valor 1.`,
-                    morph: `Multiplicar por ${base}${M.toSuperscript(-steps)} comprime cada unidad a ${reciprocal.fraction} de su tamaño.`,
-                    merge: `Las ${count} partes de ${reciprocal.fraction} encajan exactamente en una unidad: regresas a 1.`,
-                },
+            building,
+            keyframes,
+            segments,
+            total,
+            shown: null,
+            start: performance.now() - (reducedMotion.matches ? total : 0),
+            mergeText: `${pow(...opening)} · ${pow(...closing)} = ${base}⁰ = 1: regresas a la unidad.`,
+            mergeEquation: [String(base), { sup: opening[1] }, ' · ', String(base), { sup: closing[1] }, ' = ', String(base), { sup: 0 }, ' = 1'],
         };
 
-        renderEquation(mathDisplay, [
-            String(base), { sup: steps }, ' · ', String(base), { sup: -steps },
-            ' = ', String(base), { sup: 0 }, ' = 1',
-        ]);
-        mathDisplay.dataset.kind = 'unit';
-        const product = base === 1 || steps === 1 ? String(base) : `(${Array(steps).fill(base).join(' × ')})`;
-        formulaText.textContent = `${product} × 1 / ${product} = 1`;
-        canvas.setAttribute('aria-label',
-            `Animación de cancelación: ${count} unidades se comprimen y forman exactamente una unidad.`);
+        canvas.setAttribute('aria-label', building
+            ? `Animación: la pieza ${pow(base, exponent)} se repite ${base} veces, ${steps} veces, hasta llenar la unidad.`
+            : `Animación: ${pow(base, exponent)} se divide entre ${base}, ${steps} veces, hasta ocupar una unidad.`);
         cancelButton.textContent = 'Repetir animación';
         requestFrame();
     }
@@ -243,79 +351,95 @@
         cancellation = null;
     }
 
-    function setPhaseText(phase) {
-        if (cancellation.phase !== phase) {
-            cancellation.phase = phase;
-            resultExplanation.textContent = cancellation.texts[phase];
+    /** Ecuación, fórmula y explicación del paso; solo cuando cambia. */
+    function showStep(key, keyframe) {
+        if (cancellation.shown === key) {
+            return;
         }
+        cancellation.shown = key;
+        if (key === 'merge') {
+            renderEquation(mathDisplay, cancellation.mergeEquation);
+            mathDisplay.dataset.kind = 'unit';
+            formulaText.textContent = keyframe.formula;
+            resultExplanation.textContent = cancellation.mergeText;
+            return;
+        }
+        renderEquation(mathDisplay, keyframe.equation);
+        mathDisplay.dataset.kind = 'unit';
+        formulaText.textContent = keyframe.formula;
+        resultExplanation.textContent = keyframe.text;
     }
 
-    const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
-    const lerp = (a, b, t) => a + (b - a) * t;
-    const clamp01 = (t) => Math.min(1, Math.max(0, t));
-
-    function lerpRect(a, b, t, offsetA, offsetB) {
-        return {
-            x: lerp(a.x - offsetA.x, b.x - offsetB.x, t),
-            y: lerp(a.y - offsetA.y, b.y - offsetB.y, t),
-            w: lerp(a.w, b.w, t),
-            h: lerp(a.h, b.h, t),
-        };
+    function lerpRect(a, b, t) {
+        return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t), w: lerp(a.w, b.w, t), h: lerp(a.h, b.h, t) };
     }
 
     /** Dibuja la animación; devuelve true mientras no termine. */
     function drawCancellation(now) {
         const c = cancellation;
-        const elapsed = now - c.start;
-        const morphT = easeInOut(clamp01((elapsed - PHASES.hold) / PHASES.morph));
-        const zoomT = easeInOut(clamp01((elapsed - PHASES.hold - PHASES.morph) / PHASES.zoom));
-        const mergeT = clamp01((elapsed - PHASES.hold - PHASES.morph - PHASES.zoom) / PHASES.merge);
-
-        if (elapsed < PHASES.hold) {
-            setPhaseText('hold');
-        } else if (mergeT === 0) {
-            setPhaseText('morph');
-        } else {
-            setPhaseText('merge');
+        // Segmento actual y su avance t (0–1); al terminar, el último con t = 1.
+        let elapsed = now - c.start;
+        let segment = null;
+        let t = 1;
+        for (const candidate of c.segments) {
+            if (elapsed < candidate.duration) {
+                segment = candidate;
+                t = clamp01(elapsed / candidate.duration);
+                break;
+            }
+            elapsed -= candidate.duration;
         }
+        segment = segment || c.segments[c.segments.length - 1];
 
-        camera.zoom = Math.exp(lerp(Math.log(c.zoomFrom), Math.log(unitZoom()), zoomT));
+        const from = c.keyframes[segment.kind === 'move' ? segment.from : segment.to];
+        const to = c.keyframes[segment.to];
+        const moveT = segment.kind === 'move' ? easeInOut(t) : 0;
+        const mergeT = segment.kind === 'merge' ? t : 0;
+        showStep(segment.kind === 'merge' ? 'merge' : `step-${segment.to}`, to);
+
+        camera.zoom = Math.exp(lerp(Math.log(from.zoom()), Math.log(to.zoom()), moveT));
         camera.target = camera.zoom;
 
-        const offsetFrom = { x: c.from.width / 2, y: c.from.height / 2 };
-        const offsetTo = { x: 0.5, y: 0.5 };
-
-        const frameAlpha = 1 - mergeT;
-        if (frameAlpha > 0) {
-            c.from.frames.forEach((frame, i) => {
-                const target = c.to.frames[i];
-                const rect = lerpRect(frame, target, morphT, offsetFrom, offsetTo);
-                rect.padX = lerp(frame.padX, target.padX, morphT);
-                rect.padY = lerp(frame.padY, target.padY, morphT);
-                drawFrame(rect, frame.level, frameAlpha);
-            });
-        }
-
-        const labelsVisible = morphT === 0;
-        c.from.cells.forEach((cell, i) => {
-            const rect = lerpRect(cell, c.to.cells[i], morphT, offsetFrom, offsetTo);
-            const label = labelsVisible ? String(i + 1) : '';
-            drawCell(rect, GROUP_COLORS[cell.group % GROUP_COLORS.length], 1 - mergeT, label, 1 - mergeT);
+        const fade = 1 - mergeT;
+        from.frames.forEach((frame, i) => {
+            const target = to.frames[i];
+            const alpha = lerp(frame.alpha, target.alpha, moveT) * fade;
+            if (alpha > 0.01) {
+                const rect = lerpRect(frame, target, moveT);
+                rect.padX = lerp(frame.padX, target.padX, moveT);
+                rect.padY = lerp(frame.padY, target.padY, moveT);
+                drawFrame(rect, frame.level, alpha);
+            }
         });
 
-        const unitRect = { x: -0.5, y: -0.5, w: 1, h: 1 };
-        if (morphT > 0 && mergeT < 1) {
-            // Destino: el tamaño de una sola unidad original.
+        const labelFrom = moveT < 0.5 ? from : to;
+        from.cells.forEach((cell, i) => {
+            const target = to.cells[i];
+            const alpha = lerp(cell.alpha, target.alpha, moveT) * fade;
+            if (alpha > 0.01) {
+                const label = segment.kind === 'move' && moveT > 0.15 && moveT < 0.85 ? '' : labelFrom.label(i);
+                drawCell(lerpRect(cell, target, moveT), GROUP_COLORS[cell.group % GROUP_COLORS.length], alpha, label, fade);
+            }
+        });
+        if (to.highlightFirst && fade > 0.01) {
             ctx.save();
-            ctx.globalAlpha = Math.min(morphT * 2, 1) * (1 - mergeT);
-            drawOutline(unitRect, COLOR_UNIT, 'Unidad (1)');
+            ctx.globalAlpha = fade;
+            drawHighlight(lerpRect(from.cells[0], to.cells[0], moveT), COLOR_PARTITION);
+            ctx.restore();
+        }
+
+        const unitRect = lerpRect(from.unit, to.unit, moveT);
+        if (fade > 0.01) {
+            ctx.save();
+            ctx.globalAlpha = fade;
+            drawOutline(unitRect, COLOR_EXPANSION, 'Unidad (1)');
             ctx.restore();
         }
         if (mergeT > 0) {
             drawCell(unitRect, COLOR_UNIT, mergeT, '1');
         }
 
-        return elapsed < TOTAL;
+        return now - c.start < c.total;
     }
 
     // ------------------------------------------------------------- Dibujo
@@ -446,7 +570,7 @@
         });
 
         if (scene.mode === 'compression') {
-            drawOutline(centered({ x: 0, y: 0, w: 1, h: 1 }), COLOR_PARTITION, 'Unidad (1)');
+            drawOutline(centered({ x: 0, y: 0, w: 1, h: 1 }), COLOR_EXPANSION, 'Unidad (1)');
             // Mismos colores que en expansión (un color por paso). La pieza de
             // valor 1/n^k se marca con un contorno en lugar de oscurecer las
             // demás: el rosa de la partición también es el color del paso 3.
@@ -521,10 +645,6 @@
 
         if (scene) {
             camera.target = zoomFor(scene);
-            if (cancellation) {
-                const { from } = cancellation;
-                cancellation.zoomFrom = Math.min(MAX_UNIT_PX, M.fitZoom(from.width, from.height, view.width, view.height));
-            }
         }
         requestFrame();
     }

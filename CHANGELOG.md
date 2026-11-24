@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-24
+
+### Changed
+
+- **The cancellation animation now goes step by step, with the same rule that builds the powers.** Before, every unit shrank at once into one unit, with the result already shown and the pieces unlabeled.
+  - From n^k, each multiplication by n^-1 undoes one repetition: the n copies of the previous block are compressed to 1/n and fit in the place of one. The equation advances one step at a time (2⁴ · 2⁻¹ = 2³, 2⁴ · 2⁻² = 2², …), the pieces show their value (1/2, 1/4, …) and the text gives the count (16 pieces of 1/2 = 8), until n^k pieces of 1/n^k fill one unit.
+  - From n^-k, it starts from the 1/n^k piece being shown (before, it jumped to n^k) and each multiplication by n repeats it n times until it fills the unit.
+  - The camera follows each step, so large powers such as 4⁴ stay readable; the pieces then merge into 1.
+- The "Unidad (1)" outline and label are blue for negative exponents too, as for positive ones, and during the animation.
+
+### Fixed
+
+- With base 1 the end of the animation showed only "1ᵏ = 1"; it now shows the full product 1ᵏ · 1⁻ᵏ = 1⁰ = 1.
+
 ## [1.1.1] - 2026-11-24
 
 ### Fixed
@@ -52,7 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Accessibility: results announced with `aria-live`, a canvas label, labelled buttons and underlined footer links. Lighthouse scores 100 in every category.
 - The project name is the same everywhere: "Visualizador de Exponentes: Positivos y Negativos".
 
-[Unreleased]: https://github.com/airvzxf/exponent-plot/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/airvzxf/exponent-plot/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/airvzxf/exponent-plot/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/airvzxf/exponent-plot/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/airvzxf/exponent-plot/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/airvzxf/exponent-plot/releases/tag/v1.0.0
