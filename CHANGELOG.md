@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-23
+
+### Added
+
+- **Shareable links.** The base and exponent live in the URL as `#b=<base>&e=<exponent>`, the same format as exponent-dimensions, so a link opens the same state. Out-of-range values are clamped to base 0–4 and exponent −4…4; invalid ones are ignored. Editing the hash by hand updates the drawing.
+- **Link to exponent-dimensions.** Next to the equation, a link opens the same power in the 1D/2D/3D visualizer (base 1–10, exponent 0–3; a negative exponent is taken without its sign). A `lang` received from there is kept and sent back.
+- **Keyboard.** With the drawing focused, the arrow keys change the exponent (← →) and the base (↑ ↓), and C runs the cancellation animation. A hint appears inside the drawing while it has focus.
+- **Share preview.** Open Graph and Twitter metadata with a 1200 × 630 image, a canonical URL and an Apple touch icon.
+- CodeQL analysis of the JavaScript and of the GitHub Actions workflows.
+- CI check: a pull request that changes JavaScript or CSS in `src/` must also change the version, because production publishes on merge and browsers cache those files for a year.
+
+### Changed
+
+- The card can grow to 880 px tall on large screens, so more of the side panel fits without scrolling.
+
 ## [1.0.0] - 2026-11-23
 
 ### Added
@@ -31,5 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Accessibility: results announced with `aria-live`, a canvas label, labelled buttons and underlined footer links. Lighthouse scores 100 in every category.
 - The project name is the same everywhere: "Visualizador de Exponentes: Positivos y Negativos".
 
-[Unreleased]: https://github.com/airvzxf/exponent-plot/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/airvzxf/exponent-plot/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/airvzxf/exponent-plot/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/airvzxf/exponent-plot/releases/tag/v1.0.0

@@ -289,7 +289,74 @@
         return Math.min((viewWidth * margin) / contentWidth, (viewHeight * margin) / contentHeight);
     }
 
+    // ------------------------------------------------- Estado en la URL
+
+    // Mismo formato que exponent-dimensions: #b=<base>&e=<exponente>&lang=<es|en>.
+    const LIMITS = { baseMin: 0, baseMax: 4, exponentMin: -4, exponentMax: 4 };
+    const LANGS = ['es', 'en'];
+    const DIMENSIONS_URL = 'https://exponent-dimensions.rovisoft.net/';
+    const DIMENSIONS_LIMITS = { baseMin: 1, baseMax: 10, exponentMax: 3 };
+
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+    /** Entero decimal estricto ("3", "-2"); cualquier otra cosa da null. */
+    function parseInteger(text) {
+        return typeof text === 'string' && /^-?\d{1,3}$/.test(text) ? Number(text) : null;
+    }
+
+    /**
+     * Lee el hash (con o sin "#"). Los números fuera de rango se ajustan al
+     * más cercano; los inválidos o ausentes no aparecen en el resultado.
+     */
+    function parseHashState(hash) {
+        const params = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+        const state = {};
+        const base = parseInteger(params.get('b'));
+        const exponent = parseInteger(params.get('e'));
+        const lang = params.get('lang');
+        if (base !== null) {
+            state.base = clamp(base, LIMITS.baseMin, LIMITS.baseMax);
+        }
+        if (exponent !== null) {
+            state.exponent = clamp(exponent, LIMITS.exponentMin, LIMITS.exponentMax);
+        }
+        if (LANGS.includes(lang)) {
+            state.lang = lang;
+        }
+        return state;
+    }
+
+    /** Hash sin "#", en el orden b, e, lang (lang solo si se conoce). */
+    function formatHashState({ base, exponent, lang }) {
+        const params = new URLSearchParams({ b: String(base), e: String(exponent) });
+        if (LANGS.includes(lang)) {
+            params.set('lang', lang);
+        }
+        return params.toString();
+    }
+
+    /**
+     * Enlace equivalente en exponent-dimensions (base 1–10, exponente 0–3):
+     * se usa |k| porque allá no hay exponentes negativos.
+     */
+    function dimensionsLink(base, exponent, lang) {
+        const target = {
+            base: clamp(base, DIMENSIONS_LIMITS.baseMin, DIMENSIONS_LIMITS.baseMax),
+            exponent: Math.min(Math.abs(exponent), DIMENSIONS_LIMITS.exponentMax),
+            lang,
+        };
+        return {
+            ...target,
+            adjusted: target.base !== base || target.exponent !== exponent,
+            url: `${DIMENSIONS_URL}#${formatHashState(target)}`,
+        };
+    }
+
     return {
+        LIMITS,
+        dimensionsLink,
+        formatHashState,
+        parseHashState,
         describe,
         expansionLayout,
         fitZoom,

@@ -17,6 +17,8 @@
     const cancelHint = document.getElementById('cancellation-hint');
     const container = document.getElementById('main-container');
     const fullscreenButton = document.getElementById('fullscreen-btn');
+    const dimensionsLink = document.getElementById('dimensions-link');
+    const dimensionsNote = document.getElementById('dimensions-note');
 
     // Tamaño máximo en pantalla de una unidad (px) cuando hay que alejarse.
     const MAX_UNIT_PX = 200;
@@ -47,6 +49,9 @@
     let cancellation = null;
     let rafId = null;
     let lastFrameTime = null;
+    // Idioma con el que llegó el visitante desde exponent-dimensions; se
+    // devuelve en el enlace de regreso (esta página solo está en español).
+    let incomingLang;
 
     // ---------------------------------------------------------------- Texto
 
@@ -121,12 +126,64 @@
         return Math.min(MAX_UNIT_PX, M.fitZoom(width, height, view.width, view.height));
     }
 
+    // ------------------------------------------------- URL y enlaces
+
+    /** Aplica #b=&e=&lang= a los controles; devuelve true si cambió algo. */
+    function applyHash() {
+        const state = M.parseHashState(location.hash);
+        if (state.lang) {
+            incomingLang = state.lang;
+        }
+        let changed = false;
+        if (state.base !== undefined && state.base !== baseSlider.valueAsNumber) {
+            baseSlider.value = state.base;
+            changed = true;
+        }
+        if (state.exponent !== undefined && state.exponent !== exponentSlider.valueAsNumber) {
+            exponentSlider.value = state.exponent;
+            changed = true;
+        }
+        return changed;
+    }
+
+    /** Guarda el estado en la URL sin crear entradas en el historial. */
+    function writeHash(base, exponent) {
+        const hash = `#${M.formatHashState({ base, exponent, lang: incomingLang })}`;
+        if (location.hash !== hash) {
+            history.replaceState(null, '', hash);
+        }
+    }
+
+    function updateDimensionsLink(base, exponent) {
+        const link = M.dimensionsLink(base, exponent, incomingLang);
+        const power = `${link.base}${M.toSuperscript(link.exponent)}`;
+        dimensionsLink.href = link.url;
+        dimensionsLink.textContent = `Ver ${power} en 1D, 2D y 3D →`;
+        let note = 'La misma potencia como línea, cuadrado o cubo en el visualizador de dimensiones.';
+        if (link.adjusted) {
+            const reasons = [];
+            if (link.base !== base) {
+                reasons.push(`allá la base empieza en ${link.base}`);
+            }
+            if (link.exponent !== exponent) {
+                reasons.push(exponent < 0
+                    ? 'allá no hay exponentes negativos'
+                    : `allá el exponente llega hasta ${link.exponent}`);
+            }
+            note = `Se muestra ${power}: ${reasons.join(' y ')}.`;
+        }
+        dimensionsNote.textContent = note;
+        dimensionsLink.title = note;
+    }
+
     function update() {
         stopCancellation();
         const { base, exponent } = readControls();
         const info = M.describe(base, exponent);
         updateText(base, exponent, info);
         updateCancellationControl(base, exponent);
+        writeHash(base, exponent);
+        updateDimensionsLink(base, exponent);
         scene = buildScene(base, exponent, info);
         camera.target = zoomFor(scene);
         requestFrame();
@@ -482,13 +539,55 @@
         });
     }
 
+    // ------------------------------------------------------------ Teclado
+
+    /** Mueve un slider un paso; devuelve true si su valor cambió. */
+    function stepSlider(slider, delta) {
+        const next = Math.min(Number(slider.max), Math.max(Number(slider.min), slider.valueAsNumber + delta));
+        if (next === slider.valueAsNumber) {
+            return false;
+        }
+        slider.value = next;
+        return true;
+    }
+
+    function onCanvasKey(event) {
+        if (event.altKey || event.ctrlKey || event.metaKey) {
+            return;
+        }
+        const steps = {
+            ArrowLeft: [exponentSlider, -1],
+            ArrowRight: [exponentSlider, 1],
+            ArrowDown: [baseSlider, -1],
+            ArrowUp: [baseSlider, 1],
+        };
+        if (steps[event.key]) {
+            event.preventDefault();
+            if (stepSlider(...steps[event.key])) {
+                update();
+            }
+        } else if (event.key === 'c' || event.key === 'C') {
+            event.preventDefault();
+            if (!cancelButton.disabled) {
+                startCancellation();
+            }
+        }
+    }
+
     // ---------------------------------------------------------------- Inicio
 
     baseSlider.addEventListener('input', update);
     exponentSlider.addEventListener('input', update);
     cancelButton.addEventListener('click', startCancellation);
+    canvas.addEventListener('keydown', onCanvasKey);
+    window.addEventListener('hashchange', () => {
+        if (applyHash()) {
+            update();
+        }
+    });
     setupFullscreen();
 
+    applyHash();
     new ResizeObserver(resize).observe(canvasContainer);
     resize();
     update();
