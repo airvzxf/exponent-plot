@@ -139,7 +139,22 @@ test('la cancelación termina en la unidad', async () => {
     await page.click('#cancellation-btn');
     await settle();
     assert.equal(await text('math-display'), '32 · 3−2 = 30 = 1');
-    assert.match(await text('result-explanation'), /regresas a 1/);
+    assert.equal(await text('formula-text'), '9 × 1/9 = 1');
+    assert.match(await text('result-explanation'), /regresas a la unidad/);
+
+    // Desde un exponente negativo se construye: la pieza se repite.
+    await setControls(2, -3);
+    await page.click('#cancellation-btn');
+    await settle();
+    assert.equal(await text('math-display'), '2−3 · 23 = 20 = 1');
+    assert.equal(await text('formula-text'), '8 × 1/8 = 1');
+    assert.match(await text('cancellation-hint'), /repitiendo la pieza 2 veces, 3 veces/);
+
+    // Con base 1 no hay pasos, pero el cierre muestra la ecuación completa.
+    await setControls(1, 2);
+    await page.click('#cancellation-btn');
+    await settle();
+    assert.equal(await text('math-display'), '12 · 1−2 = 10 = 1');
 
     await setControls(0, 2);
     assert.equal(await page.$eval('#cancellation-btn', (b) => b.disabled), true);

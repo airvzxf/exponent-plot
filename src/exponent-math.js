@@ -256,6 +256,8 @@
             frames,
             width: widths[steps],
             height: heights[steps],
+            widths,
+            heights,
             gaps,
         };
     }
@@ -279,6 +281,88 @@
             scaleX: sx,
             scaleY: sy,
         };
+    }
+
+    /**
+     * Geometría de n^k · n^-j (0 <= j <= k) para la animación de
+     * cancelación: los j pasos exteriores están "plegados". Multiplicar por
+     * n^-1 deshace una repetición: las n copias del bloque anterior se
+     * comprimen a 1/n en la dirección de su paso y caben en el lugar de una
+     * sola. Con j = 0 es expansionLayout; con j = k, las n^k piezas llenan
+     * un cuadrado de lado 1 (como partitionLayout, sin huecos).
+     *
+     * Las celdas conservan su índice y su grupo, así que se puede
+     * interpolar entre dos valores de j celda por celda.
+     */
+    function foldLayout(base, steps, folded, gapRatio = 0.12) {
+        const full = expansionLayout(base, steps, gapRatio);
+        const { widths, heights, gaps } = full;
+        const open = steps - folded;
+        const footprintW = widths[open];
+        const footprintH = heights[open];
+        const isFolded = (step) => step > open;
+
+        // Escala en x (horizontal) o en y que aplican los pasos plegados
+        // por encima de `level`.
+        const scaleAbove = (level, horizontal) => {
+            let scale = 1;
+            for (let step = level + 1; step <= steps; step++) {
+                if (isFolded(step) && isHorizontalStep(step) === horizontal) {
+                    scale /= base;
+                }
+            }
+            return scale;
+        };
+        const scaleX = scaleAbove(0, true);
+        const scaleY = scaleAbove(0, false);
+
+        const count = intPow(base, steps);
+        const cells = [];
+        for (let index = 0; index < count; index++) {
+            let x = 0;
+            let y = 0;
+            for (let step = 1; step <= steps; step++) {
+                const digit = digitAt(index, base, step - 1);
+                const horizontal = isHorizontalStep(step);
+                if (isFolded(step)) {
+                    // Las n copias reparten la huella del bloque abierto.
+                    if (horizontal) {
+                        x += digit * (footprintW / base) * scaleAbove(step, true);
+                    } else {
+                        y += digit * (footprintH / base) * scaleAbove(step, false);
+                    }
+                } else if (horizontal) {
+                    x += digit * (widths[step - 1] + gaps[step]) * scaleX;
+                } else {
+                    y += digit * (heights[step - 1] + gaps[step]) * scaleY;
+                }
+            }
+            cells.push({ index, x, y, w: scaleX, h: scaleY, group: groupOf(index, base) });
+        }
+
+        const frames = [];
+        if (base >= 2) {
+            for (let level = 1; level <= steps; level++) {
+                const size = intPow(base, level);
+                const compressed = isFolded(level);
+                const pad = compressed ? 0 : gapRatio * (0.15 + 0.2 * (level - 1));
+                for (let first = 0; first < count; first += size) {
+                    const origin = cells[first];
+                    frames.push({
+                        level,
+                        folded: compressed,
+                        x: origin.x,
+                        y: origin.y,
+                        w: compressed ? footprintW * scaleAbove(level, true) : widths[level] * scaleX,
+                        h: compressed ? footprintH * scaleAbove(level, false) : heights[level] * scaleY,
+                        padX: pad * scaleX,
+                        padY: pad * scaleY,
+                    });
+                }
+            }
+        }
+
+        return { cells, frames, width: footprintW, height: footprintH };
     }
 
     /** Cuántos píxeles por unidad hacen falta para que un rectángulo quepa. */
@@ -360,6 +444,7 @@
         describe,
         expansionLayout,
         fitZoom,
+        foldLayout,
         formatReciprocal,
         formatSigned,
         groupOf,
