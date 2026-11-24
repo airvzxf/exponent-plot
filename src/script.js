@@ -373,6 +373,21 @@
         ctx.restore();
     }
 
+    /** Contorno grueso sobre el borde de una celda dibujada con drawCell. */
+    function drawHighlight(rect, color) {
+        const s = toScreen(rect);
+        const pad = Math.min(s.w, s.h) * 0.05;
+        const w = Math.max(0.75, s.w - pad * 2);
+        const h = Math.max(0.75, s.h - pad * 2);
+        const lineWidth = Math.min(3, Math.max(1.5, Math.min(w, h) * 0.06));
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lineWidth;
+        roundedRect(s.x + pad, s.y + pad, w, h, Math.min(w, h) * 0.1);
+        ctx.stroke();
+        ctx.restore();
+    }
+
     /** Marco de un bloque n^j: más grueso cuanto mayor es el nivel. */
     function drawFrame(frame, level, alpha = 1) {
         const s = toScreen({
@@ -432,12 +447,14 @@
 
         if (scene.mode === 'compression') {
             drawOutline(centered({ x: 0, y: 0, w: 1, h: 1 }), COLOR_PARTITION, 'Unidad (1)');
+            // Mismos colores que en expansión (un color por paso). La pieza de
+            // valor 1/n^k se marca con un contorno en lugar de oscurecer las
+            // demás: el rosa de la partición también es el color del paso 3.
             const label = `1/${scene.count}`;
             layout.cells.forEach((cell) => {
-                const highlighted = cell.index === 0;
-                const color = highlighted ? COLOR_PARTITION : GROUP_COLORS[cell.group % GROUP_COLORS.length];
-                drawCell(centered(cell), color, highlighted ? 1 : 0.45, label);
+                drawCell(centered(cell), GROUP_COLORS[cell.group % GROUP_COLORS.length], 1, label);
             });
+            drawHighlight(centered(layout.cells[0]), COLOR_PARTITION);
             return;
         }
 

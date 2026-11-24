@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-24
+
+### Fixed
+
+- **Negative exponents showed the pieces darkened.** Every piece except the 1/n^k one was drawn at 45 % opacity, so the colors no longer matched the positive exponents. All pieces now keep their step's color, as for n^k, and the 1/n^k piece is marked with a pink outline instead. The pink fill used before was also the color of step 3, so with k = −3 or −4 a whole group looked highlighted.
+
 ## [1.1.0] - 2026-11-23
 
 ### Added
@@ -46,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Accessibility: results announced with `aria-live`, a canvas label, labelled buttons and underlined footer links. Lighthouse scores 100 in every category.
 - The project name is the same everywhere: "Visualizador de Exponentes: Positivos y Negativos".
 
-[Unreleased]: https://github.com/airvzxf/exponent-plot/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/airvzxf/exponent-plot/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/airvzxf/exponent-plot/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/airvzxf/exponent-plot/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/airvzxf/exponent-plot/releases/tag/v1.0.0
