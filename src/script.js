@@ -205,7 +205,13 @@
     // pequeñas casi no se mueve (se ve el encogimiento) y en las grandes se
     // acerca para que las piezas sigan legibles.
     const TIMING = { start: 1600, move: 1100, hold: 1500, merge: 1100 };
+    // Al construir, las piezas que faltan quedan como siluetas tenues en su
+    // lugar; al empezar pasan de su color normal a silueta en INTRO_FADE ms,
+    // así no hay un salto desde la vista de n^-k.
+    const GHOST_ALPHA = 0.18;
+    const INTRO_FADE = 700;
 
+    const GHOST_COLOR = (cell) => GROUP_COLORS[cell.group % GROUP_COLORS.length];
     const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
     const lerp = (a, b, t) => a + (b - a) * t;
     const clamp01 = (t) => Math.min(1, Math.max(0, t));
@@ -302,6 +308,8 @@
                 unit: layout.unit,
                 zoom: () => M.fitZoom(1, 1, view.width, view.height),
                 label: () => fraction(count),
+                // Silueta en el lugar final de cada pieza que aún no llega.
+                ghosts: layout.cells.map((c, i) => ({ ...c, alpha: i < visible ? 0 : 1 })),
                 highlightFirst: true,
                 equation,
                 formula: `${visible} × ${fraction(count)} = ${fraction(value)}`,
@@ -389,6 +397,7 @@
             }
             elapsed -= candidate.duration;
         }
+        const introT = segment === c.segments[0] ? easeInOut(clamp01(elapsed / INTRO_FADE)) : 1;
         segment = segment || c.segments[c.segments.length - 1];
 
         const from = c.keyframes[segment.kind === 'move' ? segment.from : segment.to];
@@ -401,6 +410,17 @@
         camera.target = camera.zoom;
 
         const fade = 1 - mergeT;
+
+        if (to.ghosts) {
+            const level = lerp(1, GHOST_ALPHA, introT);
+            const ghostLabel = introT < 0.5 ? to.label(0) : '';
+            to.ghosts.forEach((ghost, i) => {
+                const alpha = lerp(from.ghosts[i].alpha, ghost.alpha, moveT) * level * fade;
+                if (alpha > 0.01) {
+                    drawCell(ghost, GHOST_COLOR(ghost), alpha, ghostLabel);
+                }
+            });
+        }
         from.frames.forEach((frame, i) => {
             const target = to.frames[i];
             const alpha = lerp(frame.alpha, target.alpha, moveT) * fade;

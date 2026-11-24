@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-11-24
+
+### Changed
+
+- **Cancellation from a negative exponent: the missing pieces stay as silhouettes.** The animation used to hide every piece except the 1/n^k one at once, a jump from the view of n^-k on screen. The other pieces now fade into faint silhouettes of their color in 0.7 s, and each copy fills its silhouette as it arrives, so it is visible from the start how many places are left.
+
 ## [1.2.0] - 2026-11-24
 
 ### Changed
@@ -66,7 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Accessibility: results announced with `aria-live`, a canvas label, labelled buttons and underlined footer links. Lighthouse scores 100 in every category.
 - The project name is the same everywhere: "Visualizador de Exponentes: Positivos y Negativos".
 
-[Unreleased]: https://github.com/airvzxf/exponent-plot/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/airvzxf/exponent-plot/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/airvzxf/exponent-plot/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/airvzxf/exponent-plot/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/airvzxf/exponent-plot/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/airvzxf/exponent-plot/compare/v1.0.0...v1.1.0
