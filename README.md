@@ -9,6 +9,9 @@ Aplicación web interactiva que muestra la potencia como **expansión y compresi
 - **Exponentes positivos ($n^k$): expansión.** $n^k$ se construye como $n$ copias de $n^{k-1}$, alternando la dirección en cada paso (horizontal, vertical, horizontal…). Cada paso tiene su color y un marco que agrupa el bloque anterior, así que con $k$ par se ve un cuadrado de cuadrados.
 - **Exponentes negativos ($n^{-k}$): compresión.** La unidad se parte en $n$ partes, $k$ veces. La unidad queda fija y se resalta una sola pieza de valor $1/n^k$; el valor se muestra como fracción y decimal (`1/256 ≈ 0.0039`).
 - **Principio de cancelación.** El botón *Ver cancelación* anima $n^k \cdot n^{-k} = n^0 = 1$: las $n^k$ unidades se comprimen a $1/n^k$ de su tamaño y juntas ocupan exactamente una unidad original.
+- **Enlaces compartibles:** el estado vive en la URL con el mismo formato que [exponent-dimensions](https://exponent-dimensions.rovisoft.net/), por ejemplo [`#b=3&e=-2`](https://exponent-plot.rovisoft.net/#b=3&e=-2). Los valores fuera de rango se ajustan (base 0–4, exponente −4…4).
+- **Enlace a exponent-dimensions:** junto a la ecuación, lleva la misma potencia a la vista en 1D, 2D y 3D (base 1–10, exponente 0–3; un exponente negativo se lleva sin signo). Si se llegó desde allá con `lang=en`, el enlace de regreso conserva el idioma.
+- **Teclado:** con el dibujo enfocado, <kbd>←</kbd> <kbd>→</kbd> cambian el exponente, <kbd>↑</kbd> <kbd>↓</kbd> la base y <kbd>C</kbd> anima la cancelación.
 - **Casos especiales explicados:** $0^k = 0$, $0^{-k}$ indefinido (división entre cero), $0^0 = 1$ por convención y $1^k = 1$.
 
 ## Tecnologías
@@ -24,7 +27,8 @@ exponent-plot/
 ├── src/                     # Sitio publicado
 │   ├── index.html
 │   ├── style.css
-│   ├── exponent-math.js     # Lógica pura (sin DOM)
+│   ├── exponent-math.js     # Lógica pura (sin DOM): textos, geometría y URL
+│   ├── og-image.png         # Vista previa al compartir (1200 × 630)
 │   └── script.js            # Dibujo, animaciones e interfaz
 ├── test/
 │   ├── unit/                # Lógica y versión de los recursos (node:test)
@@ -35,6 +39,7 @@ exponent-plot/
 ├── lighthouserc.json
 └── .github/workflows/
     ├── ci.yml               # actionlint, lint, pruebas, e2e y Lighthouse
+    ├── codeql.yml           # análisis estático de JavaScript y de los workflows
     └── release.yml          # release desde una etiqueta firmada
 ```
 
