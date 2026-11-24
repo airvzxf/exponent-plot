@@ -10,7 +10,7 @@ Aplicación web interactiva que muestra la potencia como **expansión y compresi
 - **Exponentes negativos ($n^{-k}$): compresión.** La unidad se parte en $n$ partes, $k$ veces. La unidad queda fija y se resalta una sola pieza de valor $1/n^k$; el valor se muestra como fracción y decimal (`1/256 ≈ 0.0039`).
 - **Principio de cancelación, paso a paso.** El botón *Ver cancelación* usa la misma regla que construye las potencias:
   - Desde $n^k$: multiplicar por $n^{-1}$ deshace una repetición. En cada paso las $n$ copias del bloque anterior se comprimen a $1/n$ y caben en el lugar de una sola ($2^4 \cdot 2^{-1} = 2^3$, luego $2^4 \cdot 2^{-2} = 2^2$…). Las piezas muestran su valor ($1/2$, $1/4$…) hasta que $n^k$ piezas de $1/n^k$ ocupan una unidad.
-  - Desde $n^{-k}$: se parte de la pieza de $1/n^k$ y multiplicar por $n$ la repite $n$ veces, $k$ veces, hasta llenar la unidad.
+  - Desde $n^{-k}$: se parte de la pieza de $1/n^k$ y multiplicar por $n$ la repite $n$ veces, $k$ veces, hasta llenar la unidad. Las piezas que faltan quedan como siluetas tenues y cada copia llena la suya al llegar.
   - Al final las piezas se funden en un 1. La cámara sigue cada paso, así que incluso $4^4$ (256 piezas) se lee bien.
 - **Enlaces compartibles:** el estado vive en la URL con el mismo formato que [exponent-dimensions](https://exponent-dimensions.rovisoft.net/), por ejemplo [`#b=3&e=-2`](https://exponent-plot.rovisoft.net/#b=3&e=-2). Los valores fuera de rango se ajustan (base 0–4, exponente −4…4).
 - **Enlace a exponent-dimensions:** junto a la ecuación, lleva la misma potencia a la vista en 1D, 2D y 3D (base 1–10, exponente 0–3; un exponente negativo se lleva sin signo). Si se llegó desde allá con `lang=en`, el enlace de regreso conserva el idioma.
