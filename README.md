@@ -79,7 +79,9 @@ El sitio se publica con Cloudflare Pages, conectado al repositorio de GitHub: ca
 
 Las versiones siguen [SemVer](https://semver.org/lang/es/) y se anotan en [CHANGELOG.md](CHANGELOG.md).
 
-1. En un PR de release: sube `version` en `package.json` (y `package-lock.json` con `npm install --package-lock-only`), cambia los `?v=` de `src/index.html` a la misma versión y convierte `## [Unreleased]` en `## [X.Y.Z] - AAAA-MM-DD`.
+Producción se publica en cuanto un PR llega a `main`, y el navegador guarda JS y CSS por un año. Por eso **la versión sube en el mismo PR que cambia JavaScript o CSS de `src/`** (un check de CI lo exige); ese PR es el de release. Los PRs que no tocan esos archivos (documentación, CI, pruebas, herramientas) no necesitan versión.
+
+1. En el PR: sube `version` en `package.json` (y `package-lock.json` con `npm install --package-lock-only`), cambia los `?v=` de `src/index.html` a la misma versión y convierte `## [Unreleased]` en `## [X.Y.Z] - AAAA-MM-DD`.
 2. Tras el merge, firma la etiqueta sobre el commit de `main` y súbela:
 
    ```bash

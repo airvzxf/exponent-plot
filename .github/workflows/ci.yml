@@ -62,6 +62,47 @@ jobs:
       - run: npm ci
       - run: npm run lint
 
+  # Cloudflare Pages publishes main as soon as a PR is merged, and the
+  # production domain caches JS and CSS in the browser for a year. The
+  # ?v=<version> in src/index.html only refreshes them if the version
+  # changes in the same PR that changes the files (the unit tests check
+  # that ?v= equals package.json).
+  asset-version:
+    name: asset version bumped
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fail if src/ JS or CSS changed without a version bump
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          base="$(git merge-base "${BASE_SHA}" "${HEAD_SHA}")"
+          changed="$(git diff --name-only "${base}" "${HEAD_SHA}" -- 'src/*.js' 'src/*.css')"
+          if [ -z "${changed}" ]; then
+            echo "✓ no JavaScript or CSS changes in src/"
+            exit 0
+          fi
+          old="$(git show "${base}:package.json" | jq -r .version)"
+          new="$(git show "${HEAD_SHA}:package.json" | jq -r .version)"
+          if [ "${old}" = "${new}" ]; then
+            {
+              echo "::error::src/ JavaScript or CSS changed but package.json is still ${old}."
+              echo "Changed files:"
+              echo "${changed}"
+              echo "Bump the version in this PR (package.json, package-lock.json and the ?v= URLs in src/index.html) and add its CHANGELOG section; see README 'Versiones'."
+            } >&2
+            exit 1
+          fi
+          echo "✓ version ${old} → ${new} for:"
+          echo "${changed}"
+
   unit:
     name: unit tests
     runs-on: ubuntu-latest
