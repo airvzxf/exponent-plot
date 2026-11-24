@@ -114,6 +114,26 @@ test('textos de los casos principales', async () => {
     }
 });
 
+test('con exponente negativo las piezas conservan su color', async () => {
+    // 2^-2: la unidad se parte en 2 × 2; la pieza de arriba a la derecha es
+    // del paso 1 (índigo #818cf8). Se mide un punto de su relleno lejos de
+    // la etiqueta; antes salía oscurecida (opacidad 0.45).
+    await setControls(2, -2);
+    const pixel = await page.$eval('#exponent-canvas', (canvas) => {
+        const width = canvas.width / devicePixelRatio;
+        const height = canvas.height / devicePixelRatio;
+        const zoom = Math.min(width, height) * 0.85;
+        const x = Math.round((width / 2 + zoom * 0.15) * devicePixelRatio);
+        const y = Math.round((height / 2 - zoom * 0.43) * devicePixelRatio);
+        return [...canvas.getContext('2d').getImageData(x, y, 1, 1).data];
+    });
+    const [r, g, b, a] = pixel;
+    assert.equal(a, 255);
+    for (const [actual, expected] of [[r, 0x81], [g, 0x8c], [b, 0xf8]]) {
+        assert.ok(Math.abs(actual - expected) <= 3, `pixel ${pixel} no es #818cf8`);
+    }
+});
+
 test('la cancelación termina en la unidad', async () => {
     await setControls(3, 2);
     await page.click('#cancellation-btn');
